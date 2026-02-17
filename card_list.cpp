@@ -1,7 +1,3 @@
-// card_list.cpp
-// Author: Your name
-// Implementation of the classes defined in card_list.h
-
 #include "card_list.h"
 
 CardList::CardList() : head(nullptr) {}
@@ -27,8 +23,10 @@ void CardList::insert(Node*& node, Node* parent, const Card& c) {
         node = new Node(c, parent);
         return;
     }
-    if (c < node->card) insert(node->left, node, c);
-    else if (node->card < c) insert(node->right, node, c);
+    if (c < node->card)
+        insert(node->left, node, c);
+    else if (node->card < c)
+        insert(node->right, node, c);
 }
 
 bool CardList::contains(const Card& c) const {
@@ -42,10 +40,6 @@ bool CardList::contains(Node* node, const Card& c) const {
     return true;
 }
 
-static void linkParent(CardList::Node* child, CardList::Node* parent) {
-    if (child) child->parent = parent;
-}
-
 void CardList::remove(const Card& c) {
     remove(head, c);
     if (head) head->parent = nullptr;
@@ -56,29 +50,37 @@ void CardList::remove(Node*& node, const Card& c) {
 
     if (c < node->card) {
         remove(node->left, c);
-        linkParent(node->left, node);
-    } else if (node->card < c) {
+        if (node->left) node->left->parent = node;
+    }
+    else if (node->card < c) {
         remove(node->right, c);
-        linkParent(node->right, node);
-    } else {
+        if (node->right) node->right->parent = node;
+    }
+    else {
         if (!node->left && !node->right) {
             delete node;
             node = nullptr;
-        } else if (!node->left) {
-            Node* t = node;
+        }
+        else if (!node->left) {
+            Node* temp = node;
             node = node->right;
-            linkParent(node, t->parent);
-            delete t;
-        } else if (!node->right) {
-            Node* t = node;
+            if (node) node->parent = temp->parent;
+            delete temp;
+        }
+        else if (!node->right) {
+            Node* temp = node;
             node = node->left;
-            linkParent(node, t->parent);
-            delete t;
-        } else {
-            Node* s = leftmost(node->right);
-            node->card = s->card;
-            remove(node->right, s->card);
-            linkParent(node->right, node);
+            if (node) node->parent = temp->parent;
+            delete temp;
+        }
+        else {
+            Node* succ = node->right;
+            while (succ->left) succ = succ->left;
+
+            node->card = succ->card;
+
+            remove(node->right, succ->card);
+            if (node->right) node->right->parent = node;
         }
     }
 }
@@ -108,7 +110,10 @@ CardList::Node* CardList::rightmost(Node* n) {
 
 CardList::Node* CardList::successor(Node* n) {
     if (!n) return nullptr;
-    if (n->right) return leftmost(n->right);
+
+    if (n->right)
+        return leftmost(n->right);
+
     Node* p = n->parent;
     while (p && n == p->right) {
         n = p;
@@ -119,7 +124,10 @@ CardList::Node* CardList::successor(Node* n) {
 
 CardList::Node* CardList::predecessor(Node* n) {
     if (!n) return nullptr;
-    if (n->left) return rightmost(n->left);
+
+    if (n->left)
+        return rightmost(n->left);
+
     Node* p = n->parent;
     while (p && n == p->left) {
         n = p;
@@ -129,12 +137,14 @@ CardList::Node* CardList::predecessor(Node* n) {
 }
 
 CardList::Iterator& CardList::Iterator::operator++() {
-    if (curr) curr = CardList::successor(curr);
+    if (curr)
+        curr = CardList::successor(curr);
     return *this;
 }
 
 CardList::Iterator& CardList::Iterator::operator--() {
-    if (curr) curr = CardList::predecessor(curr);
+    if (curr)
+        curr = CardList::predecessor(curr);
     return *this;
 }
 
@@ -156,7 +166,8 @@ CardList::Iterator CardList::rend() const {
 
 void playGame(CardList& alice, CardList& bob) {
     while (true) {
-        bool ap = false, bp = false;
+        bool a = false;
+        bool b = false;
 
         for (auto it = alice.begin(); it != alice.end(); ++it) {
             Card c = *it;
@@ -164,7 +175,7 @@ void playGame(CardList& alice, CardList& bob) {
                 std::cout << "Alice picked matching card " << c << std::endl;
                 alice.remove(c);
                 bob.remove(c);
-                ap = true;
+                a = true;
                 break;
             }
         }
@@ -175,11 +186,11 @@ void playGame(CardList& alice, CardList& bob) {
                 std::cout << "Bob picked matching card " << c << std::endl;
                 bob.remove(c);
                 alice.remove(c);
-                bp = true;
+                b = true;
                 break;
             }
         }
 
-        if (!ap && !bp) break;
+        if (!a && !b) break;
     }
 }
