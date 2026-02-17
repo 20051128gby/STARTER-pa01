@@ -4,10 +4,33 @@
 
 #ifndef CARD_LIST_H
 #define CARD_LIST_H
+
 #include <iostream>
-#include <string>
 #include "card.h"
+
 class CardList {
+private:
+    struct Node {
+        Card card;
+        Node* left;
+        Node* right;
+        Node* parent;
+        Node(const Card& c, Node* p) : card(c), left(nullptr), right(nullptr), parent(p) {}
+    };
+
+    Node* head;
+
+    void clear(Node* node);
+    void print(Node* node) const;
+
+    void insert(Node*& node, Node* parent, const Card& c);
+    void remove(Node*& node, const Card& c);
+    bool contains(Node* node, const Card& c) const;
+
+    static Node* leftmost(Node* n);
+    static Node* rightmost(Node* n);
+    static Node* successor(Node* n);
+    static Node* predecessor(Node* n);
 
 public:
     CardList();
@@ -18,26 +41,29 @@ public:
     bool contains(const Card& c) const;
     void print() const;
 
+    class Iterator {
+    private:
+        Node* curr;
+        const CardList* owner;
+    public:
+        Iterator(Node* c = nullptr, const CardList* o = nullptr) : curr(c), owner(o) {}
 
-private:
-    struct Node {
-        Card card;
-        Node* left;
-        Node* right;
+        const Card& operator*() const { return curr->card; }
+        const Card* operator->() const { return &(curr->card); }
 
-        Node(const Card& c) : card(c), left(nullptr), right(nullptr) {}
+        Iterator& operator++();
+        Iterator& operator--();
+
+        bool operator==(const Iterator& rhs) const { return curr == rhs.curr; }
+        bool operator!=(const Iterator& rhs) const { return curr != rhs.curr; }
     };
 
-    Node* head;
-
-    void insert(Node*& node, const Card& c);
-    void remove(Node*& node, const Card& c);
-    bool contains(Node* node, const Card& c) const;
-    void print(Node* node) const;
-    void clear(Node* node);
-
+    Iterator begin() const;
+    Iterator end() const;
+    Iterator rbegin() const;
+    Iterator rend() const;
 };
 
-
+void playGame(CardList& alice, CardList& bob);
 
 #endif
